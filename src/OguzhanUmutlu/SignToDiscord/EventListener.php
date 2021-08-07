@@ -19,18 +19,18 @@ class EventListener implements Listener {
 
     public function onPacketReceive(DataPacketReceiveEvent $event) {
         $pk = $event->getPacket();
-        if(!$pk instanceof BlockActorDataPacket && !$pk instanceof BatchPacket && isset($this->signs[$event->getPlayer()->getName()])) {
-            SignToDiscord::sendToWebhook(
-                $event->getPlayer()->getName() . " > Sign > " . implode(", ", $this->signs[$event->getPlayer()->getName()])
-            );
-            unset($this->signs[$event->getPlayer()->getName()]);
-        }
+        if(!$pk instanceof BlockActorDataPacket && !$pk instanceof BatchPacket)
+            $this->check($event);
     }
 
     public function onQuit(PlayerQuitEvent $event) {
+        $this->check($event);
+    }
+
+    public function check($event): void {
         if(isset($this->signs[$event->getPlayer()->getName()])) {
             SignToDiscord::sendToWebhook(
-                $event->getPlayer()->getName() . " > Sign > " . implode(", ", $this->signs[$event->getPlayer()->getName()])
+                $event->getPlayer()->getName() . " > Sign > " . implode(", ", array_filter($this->signs[$event->getPlayer()->getName()], function($n){return is_string($n) && strlen($n) > 0;}))
             );
             unset($this->signs[$event->getPlayer()->getName()]);
         }

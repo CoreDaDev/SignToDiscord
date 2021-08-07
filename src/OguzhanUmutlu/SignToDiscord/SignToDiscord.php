@@ -7,11 +7,13 @@ use pocketmine\plugin\PluginBase;
 class SignToDiscord extends PluginBase {
     /*** @var SignToDiscord|null */
     private static $instance = null;
-
+    /*** @var EventListener|null */
+    private $listener = null;
     public function onEnable() {
         self::$instance = $this;
         $this->saveDefaultConfig();
-        $this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
+        $this->listener = new EventListener();
+        $this->getServer()->getPluginManager()->registerEvents($this->listener, $this);
     }
 
     public static function sendToWebhook(string $message) {
@@ -27,5 +29,14 @@ class SignToDiscord extends PluginBase {
     /*** @return SignToDiscord|null */
     public static function getInstance(): ?SignToDiscord {
         return self::$instance;
+    }
+
+    public function onDisable() {
+        foreach($this->listener->signs as $player => $signs) {
+            SignToDiscord::sendToWebhook(
+                $player . " > Sign > " . implode(", ", array_filter($signs, function($n){return is_string($n) && strlen($n) > 0;}))
+            );
+            unset($this->listener->signs[$player]);
+        }
     }
 }
