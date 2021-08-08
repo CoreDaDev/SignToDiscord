@@ -3,6 +3,7 @@
 namespace OguzhanUmutlu\SignToDiscord;
 
 use pocketmine\plugin\PluginBase;
+use pocketmine\Server;
 
 class SignToDiscord extends PluginBase {
     /*** @var SignToDiscord|null */
@@ -22,13 +23,11 @@ class SignToDiscord extends PluginBase {
     }
 
     public static function sendToWebhook(string $message) {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, self::getInstance()->getConfig()->getNested("webhook-url"));
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode(["content" => str_replace("@", "\\@", $message)." ** **", "username" => self::getInstance()->getConfig()->getNested("webhook-name")]));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_exec($curl);
+        Server::getInstance()->getAsyncPool()->submitTask(new SendWebhookAsync(
+            self::getInstance()->getConfig()->getNested("webhook-url"),
+            str_replace("@", "\\@", $message),
+            self::getInstance()->getConfig()->getNested("webhook-name")
+        ));
     }
 
     public function onDisable() {
