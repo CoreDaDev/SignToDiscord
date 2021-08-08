@@ -16,6 +16,11 @@ class SignToDiscord extends PluginBase {
         $this->getServer()->getPluginManager()->registerEvents($this->listener, $this);
     }
 
+    /*** @return SignToDiscord|null */
+    public static function getInstance(): ?SignToDiscord {
+        return self::$instance;
+    }
+
     public static function sendToWebhook(string $message) {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, self::getInstance()->getConfig()->getNested("webhook-url"));
@@ -24,11 +29,6 @@ class SignToDiscord extends PluginBase {
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_exec($curl);
-    }
-
-    /*** @return SignToDiscord|null */
-    public static function getInstance(): ?SignToDiscord {
-        return self::$instance;
     }
 
     public function onDisable() {
